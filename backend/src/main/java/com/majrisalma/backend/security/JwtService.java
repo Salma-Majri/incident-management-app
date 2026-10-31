@@ -1,6 +1,7 @@
 package com.majrisalma.backend.security;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,11 +16,20 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
+    private String getSecretKey() {
+        String secret = System.getProperty("JWT_SECRET");
+        if (secret == null || secret.isEmpty()) {
+            secret = System.getenv("JWT_SECRET");
+        }
+        return secret;
+    }
 
-    @Value("${JWT_SECRET}")
-    private String secretKey;
     private Key getSignInKey() {
-        byte[] keyBytes = io.jsonwebtoken.io.Decoders.BASE64.decode(String.valueOf(Cipher.SECRET_KEY));
+        String secret = getSecretKey();
+        if (secret == null || secret.isEmpty()) {
+            throw new RuntimeException("JWT_SECRET n'est pas définie !");
+        }
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
