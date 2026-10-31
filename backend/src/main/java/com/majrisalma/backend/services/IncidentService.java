@@ -18,7 +18,6 @@ public class IncidentService {
     private final IncidentRepository incidentRepository;
     private final UserRepository userRepository;
 
-    // Créer un incident (par un EMPLOYEE)
     public Incident createIncident(Incident incident, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -28,19 +27,41 @@ public class IncidentService {
         return incidentRepository.save(incident);
     }
 
-    // Lister les incidents selon le rôle de l'utilisateur
     public List<Incident> getIncidentsForUser(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
-
-        if (user.getRole() == Role.ADMIN || user.getRole() == Role.TECHNICIAN) {
-            return incidentRepository.findAll();
-        } else {
-            return incidentRepository.findByCreatedBy(user);
-        }
+        return incidentRepository.findByCreatedBy(user);
     }
 
-    // Assigner un incident à un technicien (ADMIN ou TECHNICIAN)
+    public List<Incident> getAssignedIncidentsForTechnician(String userEmail) {
+        User technician = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Technicien introuvable"));
+        return incidentRepository.findByAssignedTo(technician);
+    }
+
+    public List<Incident> getAllIncidents() {
+        return incidentRepository.findAll();
+    }
+
+    public Incident getIncidentById(Long incidentId, String userEmail) {
+        Incident incident = incidentRepository.findById(incidentId)
+                .orElseThrow(() -> new RuntimeException("Incident introuvable"));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        // Vérification des accès : Admin, Tech assigné, ou créateur de l'incident[cite: 3]
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+        boolean isCreator = incident.getCreatedBy().equals(user);
+        boolean isAssignedTech = incident.getAssignedTo() != null && incident.getAssignedTo().equals(user);
+
+        if (!isAdmin && !isCreator && !isAssignedTech) {
+            throw new RuntimeException("Accès refusé à cet incident");
+        }
+
+        return incident;
+    }
+
     public Incident assignIncident(Long incidentId, Long technicianId) {
         Incident incident = incidentRepository.findById(incidentId)
                 .orElseThrow(() -> new RuntimeException("Incident introuvable"));
@@ -57,15 +78,10 @@ public class IncidentService {
         return incidentRepository.save(incident);
     }
 
-    // Mettre à jour le statut d'un incident
     public Incident updateStatus(Long incidentId, Status newStatus, String userEmail) {
         Incident incident = incidentRepository.findById(incidentId)
                 .orElseThrow(() -> new RuntimeException("Incident introuvable"));
 
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
-
-        // Seul un ADMIN, le TECHNICIAN assigné, ou l'EMPLOYEE créateur (dans certains cas) peut modifier
         incident.setStatus(newStatus);
         return incidentRepository.save(incident);
     }
