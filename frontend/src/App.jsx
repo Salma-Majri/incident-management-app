@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile'; 
 import Navbar from './components/Navbar';
+import EmployeeDashboard from './pages/EmployeeDashboard'; 
 
 const MainLayout = ({ children }) => {
   return (
@@ -34,7 +35,6 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 
 const AdminDashboard = () => <div><h2>Espace Administrateur</h2><p>Gestion globale et statistiques.</p></div>;
 const TechnicianDashboard = () => <div><h2>Espace Technicien</h2><p>Liste des incidents attribués.</p></div>;
-const EmployeeDashboard = () => <div><h2>Espace Employé</h2><p>Mes demandes et incidents déclarés.</p></div>;
 const Unauthorized = () => <div style={{ padding: '40px', color: '#dc2626' }}><h2>Accès Interdit (403)</h2></div>;
 
 export default function App() {
