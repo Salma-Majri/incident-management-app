@@ -1,24 +1,41 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
+import AdminUsers from './AdminUsers';
+import AdminIncidents from './Adminincidents';
 
-const STATUS_MAP = {
-  OPEN: { label: 'Ouvert', tone: 'blue' },
-  ASSIGNED: { label: 'Assigné', tone: 'amber' },
-  IN_PROGRESS: { label: 'En cours', tone: 'amber' },
-  RESOLVED: { label: 'Résolu', tone: 'green' },
-  CLOSED: { label: 'Clôturé', tone: 'green' },
-};
-
-const PRIORITY_MAP = {
-  URGENT: { label: 'Urgente', tone: 'red' },
-  HIGH: { label: 'Haute', tone: 'orange' },
-  MEDIUM: { label: 'Moyenne', tone: 'slate' },
-  LOW: { label: 'Basse', tone: 'slate' },
+const Icon = ({ name }) => {
+  const props = {
+    width: 22,
+    height: 22,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': true,
+  };
+  if (name === 'alert') {
+    return (
+      <svg {...props}>
+        <path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...props}>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.9" />
+      <path d="M16 3.1a4 4 0 0 1 0 7.8" />
+    </svg>
+  );
 };
 
 export default function AdminDashboard() {
-  const [incidents, setIncidents] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
+  const [view, setView] = useState('incidents');
   const [stats, setStats] = useState({
     totalUsers: 0,
     employees: 0,
@@ -32,20 +49,16 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [selectedTechs, setSelectedTechs] = useState({});
-  const [assigningId, setAssigningId] = useState(null);
-
   useEffect(() => {
     fetchAdminData();
   }, []);
 
-  const fetchAdminData = async () => {
+  const fetchAdminData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
 
       const incRes = await API.get('/api/incidents');
       const incsData = incRes.data || [];
-      setIncidents(incsData);
 
       let usersData = [];
       try {
@@ -55,52 +68,23 @@ export default function AdminDashboard() {
         console.log("Impossible de charger la liste des utilisateurs pour les stats détaillées", e);
       }
 
-      const totalIncidents = incsData.length;
-      const openCount = incsData.filter(i => i.status === 'OPEN').length;
-      const inProgressCount = incsData.filter(i => i.status === 'IN_PROGRESS' || i.status === 'ASSIGNED').length;
-      const closedCount = incsData.filter(i => i.status === 'CLOSED' || i.status === 'RESOLVED').length;
-
-      const totalUsers = usersData.length;
-      const empCount = usersData.filter(u => u.role === 'EMPLOYEE').length;
-      const techCount = usersData.filter(u => u.role === 'TECHNICIAN').length;
-
-      const techList = usersData.filter(u => u.role === 'TECHNICIAN');
-      setTechnicians(techList);
-
       setStats({
-        totalUsers,
-        employees: empCount,
-        technicians: techCount,
-        totalIncidents,
-        open: openCount,
-        inProgress: inProgressCount,
-        closed: closedCount,
+        totalUsers: usersData.length,
+        employees: usersData.filter((u) => u.role === 'EMPLOYEE').length,
+        technicians: usersData.filter((u) => u.role === 'TECHNICIAN').length,
+        totalIncidents: incsData.length,
+        open: incsData.filter((i) => i.status === 'OPEN').length,
+        inProgress: incsData.filter((i) => i.status === 'IN_PROGRESS' || i.status === 'ASSIGNED').length,
+        closed: incsData.filter((i) => i.status === 'CLOSED' || i.status === 'RESOLVED').length,
       });
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors du chargement des données administrateur');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
-  const handleAssign = async (incidentId) => {
-    const technicianId = selectedTechs[incidentId];
-    if (!technicianId) {
-      alert("Veuillez sélectionner un technicien.");
-      return;
-    }
-
-    try {
-      setAssigningId(incidentId);
-      await API.put(`/api/incidents/${incidentId}/assign/${technicianId}`);
-      alert("Incident assigné avec succès !");
-      fetchAdminData();
-    } catch (err) {
-      alert(err.response?.data?.message || "Erreur lors de l'assignation");
-    } finally {
-      setAssigningId(null);
-    }
-  };
+  const refreshStats = () => fetchAdminData(true);
 
   const pct = (value) =>
     stats.totalIncidents ? Math.round((value / stats.totalIncidents) * 100) : 0;
@@ -111,13 +95,31 @@ export default function AdminDashboard() {
     { key: 'closed', label: 'Clôturés / Résolus', value: stats.closed, tone: 'green' },
   ];
 
+  const views = [
+    {
+      key: 'incidents',
+      icon: 'alert',
+      title: 'Gestion des incidents',
+      desc: 'Consulter, filtrer et assigner les incidents',
+      count: stats.totalIncidents,
+      unit: 'incidents',
+    },
+    {
+      key: 'users',
+      icon: 'users',
+      title: 'Gestion des utilisateurs',
+      desc: "Gérer les comptes et le contrôle d'accès",
+      count: stats.totalUsers,
+      unit: 'utilisateurs',
+    },
+  ];
+
   return (
     <>
       <style>{css}</style>
 
       <div className="ad-page">
         <div className="ad-header">
-          <span className="ad-eyebrow">Espace administrateur</span>
           <p className="ad-subtitle">
             Supervision globale, statistiques et assignation des interventions.
           </p>
@@ -173,81 +175,36 @@ export default function AdminDashboard() {
               ))}
             </div>
 
-            <div className="ad-panel">
-              <div className="ad-panel-head">
-                <h3 className="ad-panel-title">Liste globale des incidents</h3>
-                <span className="ad-count">{incidents.length}</span>
-              </div>
+            <div className="ad-switch" role="tablist" aria-label="Section de gestion">
+              {views.map((v) => (
+                <button
+                  key={v.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={view === v.key}
+                  className={`ad-switch-btn ${view === v.key ? 'is-active' : ''}`}
+                  onClick={() => setView(v.key)}
+                >
+                  <span className="ad-switch-icon">
+                    <Icon name={v.icon} />
+                  </span>
+                  <span className="ad-switch-text">
+                    <span className="ad-switch-title">{v.title}</span>
+                    <span className="ad-switch-desc">{v.desc}</span>
+                  </span>
+                  <span className="ad-switch-count">
+                    <strong>{v.count}</strong>
+                    <small>{v.unit}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
 
-              {incidents.length === 0 ? (
-                <div className="ad-empty">Aucun incident enregistré dans le système.</div>
+            <div className="ad-view" key={view}>
+              {view === 'incidents' ? (
+                <AdminIncidents embedded onChange={refreshStats} />
               ) : (
-                <div className="ad-table-scroll">
-                  <table className="ad-table">
-                    <thead>
-                      <tr>
-                        <th>Titre</th>
-                        <th>Priorité</th>
-                        <th>Statut</th>
-                        <th>Demandeur</th>
-                        <th>Technicien</th>
-                        <th aria-label="Action" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {incidents.map((inc) => {
-                        const status = STATUS_MAP[inc.status] || { label: inc.status, tone: 'slate' };
-                        const priority = PRIORITY_MAP[inc.priority] || { label: inc.priority, tone: 'slate' };
-                        const requester = inc.createdBy?.fullName || 'N/A';
-                        return (
-                          <tr key={inc.id}>
-                            <td className="ad-cell-title">{inc.title}</td>
-                            <td>
-                              <span className={`ad-pill ad-pill-${priority.tone}`}>{priority.label}</span>
-                            </td>
-                            <td>
-                              <span className={`ad-pill ad-pill-${status.tone} ad-pill-dot`}>
-                                {status.label}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="ad-user">
-                                <span className="ad-user-avatar">{requester.charAt(0).toUpperCase()}</span>
-                                <span>{requester}</span>
-                              </div>
-                            </td>
-                            <td>
-                              <select
-                                className="ad-select"
-                                value={selectedTechs[inc.id] || ''}
-                                onChange={(e) =>
-                                  setSelectedTechs({ ...selectedTechs, [inc.id]: e.target.value })
-                                }
-                              >
-                                <option value="">Choisir un technicien</option>
-                                {technicians.map((tech) => (
-                                  <option key={tech.id} value={tech.id}>
-                                    {tech.fullName || tech.username || `Technicien #${tech.id}`}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="ad-cell-action">
-                              <button
-                                type="button"
-                                className="ad-btn"
-                                onClick={() => handleAssign(inc.id)}
-                                disabled={assigningId === inc.id}
-                              >
-                                {assigningId === inc.id ? 'Patientez...' : 'Assigner'}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <AdminUsers embedded onChange={refreshStats} />
               )}
             </div>
           </>
@@ -267,24 +224,6 @@ const css = `
   }
 
   .ad-header { margin-bottom: 28px; }
-  .ad-eyebrow {
-    display: inline-block;
-    padding: 4px 10px;
-    margin-bottom: 10px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: #7e22ce;
-    background: #f3e8ff;
-    border-radius: 999px;
-  }
-  .ad-title {
-    margin: 0;
-    font-size: 30px;
-    font-weight: 800;
-    letter-spacing: -0.8px;
-  }
   .ad-subtitle {
     margin: 6px 0 0;
     font-size: 14.5px;
@@ -443,136 +382,83 @@ const css = `
     transition: width 0.6s ease;
   }
 
-  .ad-panel {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 22px;
-    box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.25);
-    overflow: hidden;
+  .ad-switch {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
   }
-  .ad-panel-head {
+  .ad-switch-btn {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 20px 24px;
-    border-bottom: 1px solid #f1f5f9;
-  }
-  .ad-panel-title { margin: 0; font-size: 17px; font-weight: 700; }
-  .ad-count {
-    padding: 2px 10px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #7e22ce;
-    background: #f3e8ff;
-    border-radius: 999px;
-  }
-  .ad-empty { padding: 48px; text-align: center; color: #64748b; }
-
-  .ad-table-scroll { overflow-x: auto; }
-  .ad-table {
-    width: 100%;
-    min-width: 900px;
-    border-collapse: collapse;
+    gap: 16px;
+    padding: 20px 22px;
+    overflow: hidden;
+    font-family: inherit;
     text-align: left;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   }
-  .ad-table th {
-    padding: 12px 24px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.7px;
-    text-transform: uppercase;
-    color: #64748b;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+  .ad-switch-btn:hover {
+    transform: translateY(-2px);
+    border-color: #c4b5fd;
+    box-shadow: 0 14px 26px -16px rgba(124, 58, 237, 0.45);
   }
-  .ad-table td {
-    padding: 14px 24px;
-    font-size: 14px;
-    color: #1e293b;
-    border-bottom: 1px solid #f1f5f9;
-    vertical-align: middle;
+  .ad-switch-btn.is-active {
+    color: #f8fafc;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    border-color: rgba(192, 132, 252, 0.55);
+    box-shadow: 0 16px 32px -16px rgba(124, 58, 237, 0.7);
   }
-  .ad-table tbody tr { transition: background 0.15s ease; }
-  .ad-table tbody tr:hover { background: #faf5ff; }
-  .ad-table tbody tr:last-child td { border-bottom: none; }
-  .ad-cell-title { font-weight: 600; max-width: 280px; }
-  .ad-cell-action { text-align: right; }
-
-  .ad-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 999px;
-    white-space: nowrap;
-  }
-  .ad-pill-dot::before {
+  .ad-switch-btn.is-active::after {
     content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
+    position: absolute;
+    top: -50px;
+    right: -30px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(192, 132, 252, 0.35) 0%, transparent 70%);
+    pointer-events: none;
   }
-  .ad-pill-red { color: #b91c1c; background: #fee2e2; }
-  .ad-pill-orange { color: #c2410c; background: #ffedd5; }
-  .ad-pill-blue { color: #1d4ed8; background: #dbeafe; }
-  .ad-pill-amber { color: #b45309; background: #fef3c7; }
-  .ad-pill-green { color: #047857; background: #d1fae5; }
-  .ad-pill-slate { color: #475569; background: #f1f5f9; }
-
-  .ad-user { display: flex; align-items: center; gap: 10px; }
-  .ad-user-avatar {
+  .ad-switch-icon {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
-    font-size: 12px;
-    font-weight: 800;
-    color: #5b21b6;
-    background: #ede9fe;
-    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    color: #7c3aed;
+    background: #f3e8ff;
+    border-radius: 14px;
     flex-shrink: 0;
+    transition: all 0.2s ease;
   }
-
-  .ad-select {
-    width: 210px;
-    padding: 9px 12px;
-    font-family: inherit;
-    font-size: 13.5px;
-    font-weight: 500;
+  .ad-switch-btn.is-active .ad-switch-icon {
     color: #0f172a;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+    box-shadow: 0 0 20px rgba(192, 132, 252, 0.45);
   }
-  .ad-select:focus {
-    border-color: #a855f7;
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18);
+  .ad-switch-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+  .ad-switch-title { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+  .ad-switch-desc { font-size: 13px; color: #64748b; }
+  .ad-switch-btn.is-active .ad-switch-desc { color: #cbd5e1; }
+  .ad-switch-count {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.1;
   }
+  .ad-switch-count strong { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+  .ad-switch-count small { font-size: 11px; font-weight: 600; color: #94a3b8; }
 
-  .ad-btn {
-    padding: 9px 18px;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    color: #ffffff;
-    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    box-shadow: 0 6px 14px -6px rgba(124, 58, 237, 0.6);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  .ad-view { animation: ad-fade 0.22s ease-out; }
+  @keyframes ad-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .ad-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 18px -6px rgba(124, 58, 237, 0.65);
-  }
-  .ad-btn:disabled { opacity: 0.6; cursor: wait; }
 
   @media (max-width: 900px) {
     .ad-hero { grid-column: span 6; }
@@ -582,8 +468,11 @@ const css = `
     .ad-card { grid-column: span 2; }
     .ad-stats { grid-template-columns: repeat(6, 1fr); }
   }
+  @media (max-width: 700px) {
+    .ad-switch { grid-template-columns: 1fr; }
+  }
   @media (max-width: 560px) {
-    .ad-title { font-size: 25px; }
     .ad-hero-value { font-size: 38px; }
+    .ad-switch-desc { display: none; }
   }
 `;
