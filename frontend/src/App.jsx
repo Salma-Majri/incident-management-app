@@ -5,6 +5,7 @@ import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
 import EmployeeDashboard from './pages/EmployeeDashboard'; 
 import TechnicianDashboard from './pages/TechnicianDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 const MainLayout = ({ children }) => {
   return (
@@ -34,7 +35,6 @@ const ProtectedRoute = ({ children, allowedRole }) => {
   return <MainLayout>{children}</MainLayout>;
 };
 
-const AdminDashboard = () => <div><h2>Espace Administrateur</h2><p>Gestion globale et statistiques.</p></div>;
 const Unauthorized = () => <div style={{ padding: '40px', color: '#dc2626' }}><h2>Accès Interdit (403)</h2></div>;
 
 export default function App() {
