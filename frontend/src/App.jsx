@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import EmployeeDashboard from './pages/EmployeeDashboard'; 
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import IncidentDetails from './pages/IncidentDetails';
 
 const MainLayout = ({ children }) => {
   return (
@@ -72,10 +73,10 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/incidents/:id" element={<ProtectedRoute><IncidentDetails /></ProtectedRoute>} />
 
         {/* Route du profil accessible à tous les utilisateurs authentifiés */}
-        <Route 
-          path="/profile" 
+        <Route path="/profile" 
           element={
             <ProtectedRoute>
               <Profile />

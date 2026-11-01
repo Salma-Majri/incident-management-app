@@ -68,9 +68,10 @@ public class IncidentController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Incident> assignIncident(
             @PathVariable Long id,
-            @PathVariable Long technicianId
+            @PathVariable Long technicianId,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        return ResponseEntity.ok(incidentService.assignIncident(id, technicianId));
+        return ResponseEntity.ok(incidentService.assignIncident(id, technicianId, userDetails.getUsername()));
     }
 
     // PUT /api/incidents/{id}/status -> TECHNICIAN ou ADMIN

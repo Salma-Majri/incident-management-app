@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import AdminUsers from './AdminUsers';
-import AdminIncidents from './Adminincidents';
+import AdminIncidents from './AdminIncidents'
 
 const Icon = ({ name }) => {
   const props = {
