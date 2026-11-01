@@ -31,12 +31,16 @@ public class User {
     private Role role;
 
     @Column(nullable = false)
-    private boolean enabled = true;
+    private Boolean enabled = true;
 
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public boolean isEnabled() {
+        return Boolean.TRUE.equals(enabled);
     }
 }
