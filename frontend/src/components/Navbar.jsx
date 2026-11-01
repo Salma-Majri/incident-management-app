@@ -29,6 +29,7 @@ const Icon = ({ name }) => {
     strokeWidth: 2,
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
+    'aria-hidden': true,
   };
   switch (name) {
     case 'grid':
@@ -53,6 +54,13 @@ const Icon = ({ name }) => {
           <circle cx="3.5" cy="6" r="1" />
           <circle cx="3.5" cy="12" r="1" />
           <circle cx="3.5" cy="18" r="1" />
+        </svg>
+      );
+    case 'user':
+      return (
+        <svg {...props}>
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
         </svg>
       );
     case 'logout':
@@ -81,20 +89,42 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
-  const fullName = localStorage.getItem('fullName') || 'Utilisateur';
+  const [fullName, setFullName] = useState(localStorage.getItem('fullName') || 'Utilisateur');
   const role = localStorage.getItem('role') || '';
   const initial = fullName.charAt(0).toUpperCase();
   const config = ROLE_CONFIG[role] || { label: role, accent: '#94a3b8', links: [] };
+  const homePath = config.links[0]?.to || '/';
+
+  useEffect(() => {
+    const syncName = () => {
+      setFullName(localStorage.getItem('fullName') || 'Utilisateur');
+    };
+    window.addEventListener('storage-local-update', syncName);
+    window.addEventListener('storage', syncName);
+    return () => {
+      window.removeEventListener('storage-local-update', syncName);
+      window.removeEventListener('storage', syncName);
+    };
+  }, []);
 
   useEffect(() => {
     const onClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
     };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
     document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
   }, []);
 
-  useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -107,8 +137,7 @@ export default function Navbar() {
 
       <header className="nb-wrap">
         <nav className="nb" style={{ '--accent': config.accent }}>
-          {/* Brand */}
-          <Link to="/" className="nb-brand">
+          <Link to={homePath} className="nb-brand">
             <span className="nb-logo">
               <Icon name="shield" />
             </span>
@@ -122,15 +151,16 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Links */}
           <div className="nb-links">
             {config.links.map((l) => {
-              const active = location.pathname === l.to;
+              const active =
+                location.pathname === l.to || location.pathname.startsWith(`${l.to}/`);
               return (
                 <Link
                   key={l.to}
                   to={l.to}
                   className={`nb-link ${active ? 'is-active' : ''}`}
+                  aria-current={active ? 'page' : undefined}
                 >
                   <Icon name={l.icon} />
                   <span>{l.label}</span>
@@ -139,13 +169,14 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* User */}
           <div className="nb-user" ref={menuRef}>
             <button
+              type="button"
               className="nb-user-btn"
               onClick={() => setOpen((o) => !o)}
               aria-haspopup="menu"
               aria-expanded={open}
+              aria-label="Menu utilisateur"
             >
               <span className="nb-avatar">{initial}</span>
               <span className="nb-user-info">
@@ -162,6 +193,7 @@ export default function Navbar() {
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="M6 9l6 6 6-6" />
               </svg>
@@ -179,7 +211,18 @@ export default function Navbar() {
                     </div>
                   </div>
                 </div>
-                <button className="nb-menu-item" onClick={handleLogout} role="menuitem">
+
+                <Link to="/profile" className="nb-menu-item" role="menuitem">
+                  <Icon name="user" />
+                  Mon profil
+                </Link>
+
+                <button
+                  type="button"
+                  className="nb-menu-item nb-menu-logout"
+                  onClick={handleLogout}
+                  role="menuitem"
+                >
                   <Icon name="logout" />
                   Déconnexion
                 </button>
@@ -204,9 +247,9 @@ const css = `
   .nb {
     max-width: 1200px;
     margin: 0 auto;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     gap: 16px;
     padding: 10px 14px 10px 16px;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
@@ -217,12 +260,12 @@ const css = `
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
-  /* Brand */
   .nb-brand {
     display: flex;
     align-items: center;
     gap: 10px;
     text-decoration: none;
+    justify-self: start;
   }
   .nb-logo {
     display: grid;
@@ -234,6 +277,7 @@ const css = `
     background: linear-gradient(135deg, #67e8f9 0%, #a78bfa 100%);
     box-shadow: 0 0 20px rgba(103, 232, 249, 0.35);
     transition: transform 0.3s ease;
+    flex-shrink: 0;
   }
   .nb-brand:hover .nb-logo { transform: rotate(-8deg) scale(1.06); }
   .nb-brand-text {
@@ -256,13 +300,13 @@ const css = `
     color: #94a3b8;
     white-space: nowrap;
   }
-  @media (max-width: 1000px) {
+  @media (max-width: 1100px) {
     .nb-brand-tagline { display: none; }
   }
 
-  /* Links */
   .nb-links {
     display: flex;
+    justify-content: center;
     gap: 4px;
   }
   .nb-link {
@@ -274,6 +318,7 @@ const css = `
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
+    white-space: nowrap;
     color: #94a3b8;
     transition: color 0.2s ease;
   }
@@ -298,13 +343,13 @@ const css = `
   .nb-link.is-active svg { color: var(--accent); }
   .nb-link.is-active::after { transform: scaleX(1); }
 
-  /* User */
-  .nb-user { position: relative; }
+  .nb-user { position: relative; justify-self: end; }
   .nb-user-btn {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 5px 10px 5px 5px;
+    font-family: inherit;
     color: #e2e8f0;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -347,7 +392,6 @@ const css = `
   .nb-chevron { color: #94a3b8; transition: transform 0.2s ease; }
   .nb-chevron.is-open { transform: rotate(180deg); }
 
-  /* Dropdown */
   .nb-menu {
     position: absolute;
     right: 0;
@@ -393,6 +437,8 @@ const css = `
     gap: 10px;
     width: 100%;
     padding: 10px 12px;
+    box-sizing: border-box;
+    font-family: inherit;
     font-size: 13.5px;
     font-weight: 600;
     color: #cbd5e1;
@@ -400,16 +446,23 @@ const css = `
     border: none;
     border-radius: 10px;
     cursor: pointer;
+    text-align: left;
+    text-decoration: none;
     transition: background 0.15s ease, color 0.15s ease;
   }
-  .nb-menu-item:hover { background: rgba(248, 113, 113, 0.12); color: #fca5a5; }
+  .nb-menu-item:hover { background: rgba(255, 255, 255, 0.08); color: #f8fafc; }
+  .nb-menu-logout:hover { background: rgba(248, 113, 113, 0.12); color: #fca5a5; }
 
-  /* Responsive */
   @media (max-width: 720px) {
     .nb-wrap { padding: 10px 10px 0; }
-    .nb { flex-wrap: wrap; border-radius: 18px; }
+    .nb {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      border-radius: 18px;
+    }
     .nb-brand-text, .nb-user-info, .nb-chevron { display: none; }
     .nb-user-btn { padding: 4px; }
-    .nb-links { order: 3; width: 100%; justify-content: center; }
+    .nb-links { order: 3; width: 100%; }
   }
 `;
