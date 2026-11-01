@@ -52,4 +52,17 @@ public class UserService {
         user.setEnabled(false);
         return userRepository.save(user);
     }
+
+
+
+    public void updatePassword(String email, String oldPassword, String newPassword) {
+        User user = getUserByEmail(email);
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("L'ancien mot de passe est incorrect.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
