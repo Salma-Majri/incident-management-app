@@ -25,7 +25,7 @@ public class ApplicationConfig {
                 .map(user -> org.springframework.security.core.userdetails.User.builder()
                         .username(user.getEmail())
                         .password(user.getPassword())
-                        .authorities(user.getRole().name())
+                        .authorities("ROLE_" + user.getRole().name())
                         .disabled(!user.isEnabled())
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable"));
