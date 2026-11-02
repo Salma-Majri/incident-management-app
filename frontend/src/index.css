@@ -109,3 +109,18 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #f1f5f9;
+  box-sizing: border-box;
+}
+
+main {
+  width: 100% !important;
+  box-sizing: border-box;
+}

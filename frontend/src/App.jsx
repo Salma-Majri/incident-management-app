@@ -11,9 +11,9 @@ import Unauthorized from './pages/Unauthorized';
 
 const MainLayout = ({ children }) => {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', width: '100%', boxSizing: 'border-box' }}>
       <Navbar />
-      <main style={{ padding: '24px' }}>
+      <main style={{ width: '100%', boxSizing: 'border-box' }}>
         {children}
       </main>
     </div>

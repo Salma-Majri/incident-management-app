@@ -240,12 +240,16 @@ const css = `
     position: sticky;
     top: 0;
     z-index: 100;
+    width: 100%;
+    box-sizing: border-box;
     padding: 14px 20px 0;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   .nb {
-    max-width: 1200px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
