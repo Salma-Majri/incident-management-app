@@ -13,6 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -31,11 +33,9 @@ public class AuthService {
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.EMPLOYEE) // Rôle attribué automatiquement
+                .role(Role.EMPLOYEE)
                 .enabled(true)
                 .build();
-
-        userRepository.save(user);
 
         var userDetails = org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
@@ -44,9 +44,14 @@ public class AuthService {
                 .build();
 
         var jwtToken = jwtService.generateToken(userDetails);
+        var refreshToken = jwtService.generateRefreshToken(userDetails);
+
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
 
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken)
                 .role(user.getRole().name())
                 .fullName(user.getFullName())
                 .build();
@@ -74,11 +79,40 @@ public class AuthService {
                 .build();
 
         var jwtToken = jwtService.generateToken(userDetails);
+        var refreshToken = jwtService.generateRefreshToken(userDetails);
+
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
 
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken)
                 .role(user.getRole().name())
                 .fullName(user.getFullName())
                 .build();
+    }
+
+    public Map<String, String> refreshToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            throw new RuntimeException("Refresh Token est vide");
+        }
+
+        String email = jwtService.extractUsername(refreshToken);
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        var userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                .authorities(user.getRole().name())
+                .build();
+
+        if (!jwtService.isRefreshTokenValid(refreshToken, userDetails) || !refreshToken.equals(user.getRefreshToken())) {
+            throw new RuntimeException("Refresh Token invalide ou expiré");
+        }
+
+        String newAccessToken = jwtService.generateToken(userDetails);
+
+        return Map.of("accessToken", newAccessToken);
     }
 }

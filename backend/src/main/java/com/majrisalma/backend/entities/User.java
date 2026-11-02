@@ -35,6 +35,12 @@ public class User {
 
     private LocalDateTime createdAt;
 
+
+
+    @Column(length = 500)
+    private String refreshToken;
+
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
