@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../api/axios';
+import API from '../api/api';
 import './AdminIncidents.css';
 
 const STATUS_MAP = {

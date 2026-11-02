@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import API from '../api/axios';
+import API from '../api/api';
 import AdminUsers from './AdminUsers';
 import AdminIncidents from './AdminIncidents';
 import './AdminDashboard.css';

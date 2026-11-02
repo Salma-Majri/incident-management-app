@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import API from '../api/axios';
+import API from '../api/api';
 
 const ROLE_MAP = {
   ADMIN: { label: 'Administrateur', tone: 'violet' },

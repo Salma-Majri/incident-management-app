@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import API from '../api/axios';
+import API from '../api/api';
 
 export default function Login() {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
