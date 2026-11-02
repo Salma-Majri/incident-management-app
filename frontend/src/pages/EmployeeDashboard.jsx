@@ -18,6 +18,17 @@ const PRIORITY_MAP = {
   LOW: { label: 'Basse', tone: 'slate' },
 };
 
+const CATEGORY_MAP = {
+  NETWORK: 'Réseau',
+  MALWARE: 'Malware',
+  PHISHING: 'Phishing',
+  ACCESS: 'Accès',
+  SOFTWARE: 'Logiciel (Software)',
+  HARDWARE: 'Matériel (Hardware)',
+  DATA_LEAK: 'Fuite de données',
+  OTHER: 'Autre',
+};
+
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString('fr-FR') : '—';
 
@@ -33,6 +44,7 @@ export default function EmployeeDashboard() {
     title: '',
     description: '',
     priority: 'MEDIUM',
+    category: 'SOFTWARE', 
   });
 
   useEffect(() => {
@@ -63,7 +75,7 @@ export default function EmployeeDashboard() {
       await API.post('/api/incidents', formData);
       setSuccess('Incident déclaré avec succès !');
       setShowModal(false);
-      setFormData({ title: '', description: '', priority: 'MEDIUM' });
+      setFormData({ title: '', description: '', priority: 'MEDIUM', category: 'SOFTWARE' });
       fetchIncidents();
     } catch (err) {
       setError(err.response?.data?.message || "Erreur lors de la création de l'incident");
@@ -161,6 +173,11 @@ export default function EmployeeDashboard() {
                           <span className="em-recent-title">{inc.title}</span>
                           <span className="em-recent-date">{formatDate(inc.createdAt)}</span>
                         </div>
+                        {inc.category && (
+                          <span className="em-pill em-pill-slate">
+                            {CATEGORY_MAP[inc.category] || inc.category}
+                          </span>
+                        )}
                         <span className={`em-pill em-pill-${priority.tone}`}>{priority.label}</span>
                         <span className={`em-pill em-pill-dot em-pill-${status.tone}`}>
                           {status.label}
@@ -193,7 +210,9 @@ export default function EmployeeDashboard() {
                       <h4 className="em-incident-title">{inc.title}</h4>
                       <p className="em-incident-desc">{inc.description}</p>
                       <div className="em-incident-foot">
-                        <span className="em-incident-foot-label">Statut</span>
+                        <span className="em-incident-foot-label">
+                          {inc.category ? CATEGORY_MAP[inc.category] : '—'}
+                        </span>
                         <span className={`em-pill em-pill-dot em-pill-${status.tone}`}>
                           {status.label}
                         </span>
@@ -234,6 +253,27 @@ export default function EmployeeDashboard() {
                   placeholder="Ex: Panne imprimante bureau 3"
                   className="em-input"
                 />
+              </div>
+
+              {/* إضافة قائمة اختيار الـ Category هنا */}
+              <div className="em-field">
+                <label className="em-label">Catégorie</label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="em-input"
+                  required
+                >
+                  <option value="NETWORK">Réseau</option>
+                  <option value="MALWARE">Malware</option>
+                  <option value="PHISHING">Phishing</option>
+                  <option value="ACCESS">Accès</option>
+                  <option value="SOFTWARE">Logiciel (Software)</option>
+                  <option value="HARDWARE">Matériel (Hardware)</option>
+                  <option value="DATA_LEAK">Fuite de données</option>
+                  <option value="OTHER">Autre</option>
+                </select>
               </div>
 
               <div className="em-field">

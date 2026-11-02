@@ -241,14 +241,16 @@
   border: 1px solid #e2e8f0;
   border-radius: 22px;
   box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.25);
+  padding: 20px;
 }
 
 .em-panel-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 20px 24px;
+  padding: 0 4px 16px 4px;
   border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 16px;
 }
 
 .em-section-head {
@@ -277,49 +279,43 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .em-recent-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
   cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.em-recent-item:last-child {
-  border-bottom: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .em-recent-item:hover {
-  background: #f0fdf4;
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 20px -10px rgba(15, 23, 42, 0.08);
 }
 
 .em-recent-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: #94a3b8;
 }
 
-.em-dot-blue {
-  background: #3b82f6;
-}
-
-.em-dot-violet {
-  background: #8b5cf6;
-}
-
-.em-dot-amber {
-  background: #f59e0b;
-}
-
-.em-dot-green {
-  background: #10b981;
-}
+.em-dot-blue { background: #3b82f6; }
+.em-dot-violet { background: #8b5cf6; }
+.em-dot-amber { background: #f59e0b; }
+.em-dot-green { background: #10b981; }
+.em-dot-red { background: #ef4444; }
 
 .em-recent-main {
   display: flex;
@@ -330,16 +326,18 @@
 }
 
 .em-recent-title {
-  overflow: hidden;
-  font-size: 14.5px;
-  font-weight: 600;
-  text-overflow: ellipsis;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .em-recent-date {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .em-pill {
