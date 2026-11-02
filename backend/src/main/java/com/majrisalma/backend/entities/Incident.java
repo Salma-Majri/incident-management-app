@@ -1,6 +1,8 @@
 package com.majrisalma.backend.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.LocalDateTime;
 
@@ -18,18 +20,26 @@ public class Incident {
     private Long id;
 
     @Column(nullable = false)
+    @NotBlank(message = "Le titre de l'incident est obligatoire")
     private String title;
 
     @Column(columnDefinition = "TEXT", nullable = false)
+    @NotBlank(message = "La description est obligatoire")
     private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Category category;
 
+
+
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @NotNull(message = "La priorité est obligatoire")
     private Priority priority;
+
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -3,6 +3,7 @@ package com.majrisalma.backend.controllers;
 import com.majrisalma.backend.entities.Incident;
 import com.majrisalma.backend.entities.Status;
 import com.majrisalma.backend.services.IncidentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ public class IncidentController {
     @PostMapping
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<Incident> createIncident(
-            @RequestBody Incident incident,
+            @RequestBody @Valid Incident incident,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         return ResponseEntity.ok(incidentService.createIncident(incident, userDetails.getUsername()));
