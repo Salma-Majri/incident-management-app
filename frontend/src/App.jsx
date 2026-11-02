@@ -7,6 +7,7 @@ import EmployeeDashboard from './pages/EmployeeDashboard';
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import IncidentDetails from './pages/IncidentDetails';
+import Unauthorized from './pages/Unauthorized';
 
 const MainLayout = ({ children }) => {
   return (
@@ -36,7 +37,6 @@ const ProtectedRoute = ({ children, allowedRole }) => {
   return <MainLayout>{children}</MainLayout>;
 };
 
-const Unauthorized = () => <div style={{ padding: '40px', color: '#dc2626' }}><h2>Accès Interdit (403)</h2></div>;
 
 export default function App() {
   return (
