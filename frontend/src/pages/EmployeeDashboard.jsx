@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import './EmployeeDashboard.css';
 
 const STATUS_MAP = {
   OPEN: { label: 'Ouvert', tone: 'blue' },
@@ -20,6 +22,7 @@ const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString('fr-FR') : '—';
 
 export default function EmployeeDashboard() {
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -91,557 +94,188 @@ export default function EmployeeDashboard() {
   };
 
   return (
-    <>
-      <style>{css}</style>
-
-      <div className="em-page">
-        <div className="em-header">
-          <div>
-            <p className="em-subtitle">Suivez et déclarez vos problèmes techniques.</p>
-          </div>
-          <button type="button" className="em-btn" onClick={() => setShowModal(true)}>
-            <span className="em-btn-plus">+</span> Déclarer un incident
-          </button>
+    <div className="em-page">
+      <div className="em-header">
+        <div>
+          <p className="em-subtitle">Suivez et déclarez vos problèmes techniques.</p>
         </div>
+        <button type="button" className="em-btn" onClick={() => setShowModal(true)}>
+          <span className="em-btn-plus">+</span> Déclarer un incident
+        </button>
+      </div>
 
-        {error && <div className="em-alert em-alert-error">{error}</div>}
-        {success && <div className="em-alert em-alert-success">{success}</div>}
+      {error && <div className="em-alert em-alert-error">{error}</div>}
+      {success && <div className="em-alert em-alert-success">{success}</div>}
 
-        {loading ? (
-          <div className="em-loading">
-            <span className="em-spinner" />
-            Chargement des incidents...
-          </div>
-        ) : (
-          <>
-            <div className="em-stats">
-              <div className="em-hero">
-                <span className="em-hero-label">Total de mes incidents</span>
-                <span className="em-hero-value">{total}</span>
-              </div>
-
-              {statCards.map((c) => (
-                <div key={c.key} className={`em-card em-tone-${c.tone}`}>
-                  <div className="em-card-top">
-                    <span className="em-card-label">{c.label}</span>
-                    <span className="em-card-pct">{pct(c.value)}%</span>
-                  </div>
-                  <span className="em-card-value">{c.value}</span>
-                  <div className="em-bar">
-                    <div className="em-bar-fill" style={{ width: `${pct(c.value)}%` }} />
-                  </div>
-                </div>
-              ))}
+      {loading ? (
+        <div className="em-loading">
+          <span className="em-spinner" />
+          Chargement des incidents...
+        </div>
+      ) : (
+        <>
+          <div className="em-stats">
+            <div className="em-hero">
+              <span className="em-hero-label">Total de mes incidents</span>
+              <span className="em-hero-value">{total}</span>
             </div>
 
-            {incidents.length === 0 ? (
-              <div className="em-empty">
-                <div className="em-empty-icon">📭</div>
-                Aucun incident déclaré pour le moment.
+            {statCards.map((c) => (
+              <div key={c.key} className={`em-card em-tone-${c.tone}`}>
+                <div className="em-card-top">
+                  <span className="em-card-label">{c.label}</span>
+                  <span className="em-card-pct">{pct(c.value)}%</span>
+                </div>
+                <span className="em-card-value">{c.value}</span>
+                <div className="em-bar">
+                  <div className="em-bar-fill" style={{ width: `${pct(c.value)}%` }} />
+                </div>
               </div>
-            ) : (
-              <>
-                <div className="em-panel">
-                  <div className="em-panel-head">
-                    <h3 className="em-panel-title">Derniers incidents</h3>
-                    <span className="em-count">{recent.length}</span>
-                  </div>
-                  <ul className="em-recent">
-                    {recent.map((inc) => {
-                      const status = renderPill(STATUS_MAP, inc.status);
-                      const priority = renderPill(PRIORITY_MAP, inc.priority);
-                      return (
-                        <li key={inc.id || inc._id} className="em-recent-item">
-                          <span className={`em-recent-dot em-dot-${status.tone}`} />
-                          <div className="em-recent-main">
-                            <span className="em-recent-title">{inc.title}</span>
-                            <span className="em-recent-date">{formatDate(inc.createdAt)}</span>
-                          </div>
-                          <span className={`em-pill em-pill-${priority.tone}`}>{priority.label}</span>
-                          <span className={`em-pill em-pill-dot em-pill-${status.tone}`}>
-                            {status.label}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+            ))}
+          </div>
 
-                <div className="em-section-head">
-                  <h3 className="em-panel-title">Tous mes incidents</h3>
-                  <span className="em-count">{total}</span>
+          {incidents.length === 0 ? (
+            <div className="em-empty">
+              <div className="em-empty-icon">📭</div>
+              Aucun incident déclaré pour le moment.
+            </div>
+          ) : (
+            <>
+              <div className="em-panel">
+                <div className="em-panel-head">
+                  <h3 className="em-panel-title">Derniers incidents</h3>
+                  <span className="em-count">{recent.length}</span>
                 </div>
-
-                <div className="em-grid">
-                  {sorted.map((inc) => {
-                    const status = renderPill(STATUS_MAP, inc.status || 'OPEN');
+                <ul className="em-recent">
+                  {recent.map((inc) => {
+                    const status = renderPill(STATUS_MAP, inc.status);
                     const priority = renderPill(PRIORITY_MAP, inc.priority);
                     return (
-                      <div key={inc.id || inc._id} className="em-incident">
-                        <div className="em-incident-top">
-                          <span className={`em-pill em-pill-${priority.tone}`}>{priority.label}</span>
-                          <span className="em-incident-date">{formatDate(inc.createdAt)}</span>
+                      <li
+                        key={inc.id || inc._id}
+                        className="em-recent-item"
+                        onClick={() => navigate(`/incidents/${inc.id || inc._id}`)}
+                      >
+                        <span className={`em-recent-dot em-dot-${status.tone}`} />
+                        <div className="em-recent-main">
+                          <span className="em-recent-title">{inc.title}</span>
+                          <span className="em-recent-date">{formatDate(inc.createdAt)}</span>
                         </div>
-                        <h4 className="em-incident-title">{inc.title}</h4>
-                        <p className="em-incident-desc">{inc.description}</p>
-                        <div className="em-incident-foot">
-                          <span className="em-incident-foot-label">Statut</span>
-                          <span className={`em-pill em-pill-dot em-pill-${status.tone}`}>
-                            {status.label}
-                          </span>
-                        </div>
-                      </div>
+                        <span className={`em-pill em-pill-${priority.tone}`}>{priority.label}</span>
+                        <span className={`em-pill em-pill-dot em-pill-${status.tone}`}>
+                          {status.label}
+                        </span>
+                      </li>
                     );
                   })}
-                </div>
-              </>
-            )}
-          </>
-        )}
-
-        {showModal && (
-          <div className="em-overlay" onClick={() => setShowModal(false)}>
-            <div className="em-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="em-modal-head">
-                <h3 className="em-modal-title">Déclarer un nouvel incident</h3>
-                <button
-                  type="button"
-                  className="em-close"
-                  onClick={() => setShowModal(false)}
-                  aria-label="Fermer"
-                >
-                  ×
-                </button>
+                </ul>
               </div>
 
-              <form onSubmit={handleSubmit} className="em-form">
-                <div className="em-field">
-                  <label className="em-label">Titre</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    required
-                    placeholder="Ex: Panne imprimante bureau 3"
-                    className="em-input"
-                  />
-                </div>
+              <div className="em-section-head">
+                <h3 className="em-panel-title">Tous mes incidents</h3>
+                <span className="em-count">{total}</span>
+              </div>
 
-                <div className="em-field">
-                  <label className="em-label">Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                    rows="4"
-                    placeholder="Décrivez le problème en détail..."
-                    className="em-input em-textarea"
-                  />
-                </div>
+              <div className="em-grid">
+                {sorted.map((inc) => {
+                  const status = renderPill(STATUS_MAP, inc.status || 'OPEN');
+                  const priority = renderPill(PRIORITY_MAP, inc.priority);
+                  return (
+                    <div
+                      key={inc.id || inc._id}
+                      className="em-incident"
+                      onClick={() => navigate(`/incidents/${inc.id || inc._id}`)}
+                    >
+                      <div className="em-incident-top">
+                        <span className={`em-pill em-pill-${priority.tone}`}>{priority.label}</span>
+                        <span className="em-incident-date">{formatDate(inc.createdAt)}</span>
+                      </div>
+                      <h4 className="em-incident-title">{inc.title}</h4>
+                      <p className="em-incident-desc">{inc.description}</p>
+                      <div className="em-incident-foot">
+                        <span className="em-incident-foot-label">Statut</span>
+                        <span className={`em-pill em-pill-dot em-pill-${status.tone}`}>
+                          {status.label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </>
+      )}
 
-                <div className="em-field">
-                  <label className="em-label">Priorité</label>
-                  <select
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleChange}
-                    className="em-input"
-                  >
-                    <option value="LOW">Basse</option>
-                    <option value="MEDIUM">Moyenne</option>
-                    <option value="HIGH">Haute</option>
-                    <option value="CRITICAL">Critique</option>
-                  </select>
-                </div>
-
-                <div className="em-actions">
-                  <button type="button" className="em-btn-ghost" onClick={() => setShowModal(false)}>
-                    Annuler
-                  </button>
-                  <button type="submit" className="em-btn">
-                    Envoyer
-                  </button>
-                </div>
-              </form>
+      {showModal && (
+        <div className="em-overlay" onClick={() => setShowModal(false)}>
+          <div className="em-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="em-modal-head">
+              <h3 className="em-modal-title">Déclarer un nouvel incident</h3>
+              <button
+                type="button"
+                className="em-close"
+                onClick={() => setShowModal(false)}
+                aria-label="Fermer"
+              >
+                ×
+              </button>
             </div>
+
+            <form onSubmit={handleSubmit} className="em-form">
+              <div className="em-field">
+                <label className="em-label">Titre</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  placeholder="Ex: Panne imprimante bureau 3"
+                  className="em-input"
+                />
+              </div>
+
+              <div className="em-field">
+                <label className="em-label">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  required
+                  rows="4"
+                  placeholder="Décrivez le problème en détail..."
+                  className="em-input em-textarea"
+                />
+              </div>
+
+              <div className="em-field">
+                <label className="em-label">Priorité</label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="em-input"
+                >
+                  <option value="LOW">Basse</option>
+                  <option value="MEDIUM">Moyenne</option>
+                  <option value="HIGH">Haute</option>
+                  <option value="CRITICAL">Critique</option>
+                </select>
+              </div>
+
+              <div className="em-actions">
+                <button type="button" className="em-btn-ghost" onClick={() => setShowModal(false)}>
+                  Annuler
+                </button>
+                <button type="submit" className="em-btn">
+                  Envoyer
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </div>
   );
 }
-
-const css = `
-  .em-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 32px 20px 56px;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    color: #0f172a;
-  }
-
-  .em-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 28px;
-  }
-  .em-eyebrow {
-    display: inline-block;
-    padding: 4px 10px;
-    margin-bottom: 10px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: #047857;
-    background: #d1fae5;
-    border-radius: 999px;
-  }
-  .em-title { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.8px; }
-  .em-subtitle { margin: 6px 0 0; font-size: 14.5px; color: #64748b; }
-
-  .em-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 11px 20px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 700;
-    color: #022c22;
-    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    box-shadow: 0 8px 18px -8px rgba(16, 185, 129, 0.7);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-  .em-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 22px -8px rgba(16, 185, 129, 0.75);
-  }
-  .em-btn-plus { font-size: 18px; line-height: 1; }
-  .em-btn-ghost {
-    padding: 11px 18px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    color: #475569;
-    background: #f1f5f9;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  .em-btn-ghost:hover { background: #e2e8f0; }
-
-  .em-alert {
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    font-size: 14px;
-    border-radius: 12px;
-  }
-  .em-alert-error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; }
-  .em-alert-success { color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; }
-
-  .em-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 60px;
-    color: #64748b;
-  }
-  .em-spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #e2e8f0;
-    border-top-color: #34d399;
-    border-radius: 50%;
-    animation: em-spin 0.7s linear infinite;
-  }
-  @keyframes em-spin { to { transform: rotate(360deg); } }
-
-  .em-stats {
-    display: grid;
-    grid-template-columns: 1.3fr repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-  .em-hero {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 22px 24px;
-    overflow: hidden;
-    color: #f8fafc;
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    box-shadow: 0 14px 30px -14px rgba(15, 23, 42, 0.55);
-  }
-  .em-hero::after {
-    content: '';
-    position: absolute;
-    top: -60px;
-    right: -40px;
-    width: 180px;
-    height: 180px;
-    background: radial-gradient(circle, rgba(52, 211, 153, 0.35) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .em-hero-label {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    color: #94a3b8;
-  }
-  .em-hero-value { font-size: 46px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; }
-  .em-hero-note { margin-top: 6px; font-size: 12.5px; color: #cbd5e1; }
-
-  .em-card {
-    --tone: #64748b;
-    --tone-soft: #f1f5f9;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 18px 20px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 18px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .em-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -12px rgba(15, 23, 42, 0.18); }
-  .em-tone-blue { --tone: #3b82f6; --tone-soft: #dbeafe; }
-  .em-tone-amber { --tone: #f59e0b; --tone-soft: #fef3c7; }
-  .em-tone-green { --tone: #10b981; --tone-soft: #d1fae5; }
-  .em-card-top { display: flex; align-items: center; justify-content: space-between; }
-  .em-card-label { font-size: 13px; font-weight: 600; color: #64748b; }
-  .em-card-pct {
-    padding: 2px 8px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--tone);
-    background: var(--tone-soft);
-    border-radius: 999px;
-  }
-  .em-card-value { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
-  .em-bar { height: 6px; overflow: hidden; background: #f1f5f9; border-radius: 999px; }
-  .em-bar-fill { height: 100%; background: var(--tone); border-radius: 999px; transition: width 0.6s ease; }
-
-  .em-panel {
-    margin-bottom: 32px;
-    overflow: hidden;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 22px;
-    box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.25);
-  }
-  .em-panel-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 20px 24px;
-    border-bottom: 1px solid #f1f5f9;
-  }
-  .em-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-  .em-panel-title { margin: 0; font-size: 17px; font-weight: 700; }
-  .em-count {
-    padding: 2px 10px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #047857;
-    background: #d1fae5;
-    border-radius: 999px;
-  }
-
-  .em-recent { margin: 0; padding: 0; list-style: none; }
-  .em-recent-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 24px;
-    border-bottom: 1px solid #f1f5f9;
-    transition: background 0.15s ease;
-  }
-  .em-recent-item:last-child { border-bottom: none; }
-  .em-recent-item:hover { background: #f0fdf4; }
-  .em-recent-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: #94a3b8; }
-  .em-dot-blue { background: #3b82f6; }
-  .em-dot-violet { background: #8b5cf6; }
-  .em-dot-amber { background: #f59e0b; }
-  .em-dot-green { background: #10b981; }
-  .em-recent-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-  .em-recent-title {
-    overflow: hidden;
-    font-size: 14.5px;
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .em-recent-date { font-size: 12px; color: #94a3b8; }
-
-  .em-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 999px;
-    white-space: nowrap;
-  }
-  .em-pill-dot::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-  .em-pill-red { color: #b91c1c; background: #fee2e2; }
-  .em-pill-orange { color: #c2410c; background: #ffedd5; }
-  .em-pill-blue { color: #1d4ed8; background: #dbeafe; }
-  .em-pill-violet { color: #6d28d9; background: #ede9fe; }
-  .em-pill-amber { color: #b45309; background: #fef3c7; }
-  .em-pill-green { color: #047857; background: #d1fae5; }
-  .em-pill-slate { color: #475569; background: #f1f5f9; }
-
-  .em-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-  }
-  .em-incident {
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 18px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-  .em-incident:hover {
-    transform: translateY(-2px);
-    border-color: #a7f3d0;
-    box-shadow: 0 14px 26px -14px rgba(16, 185, 129, 0.35);
-  }
-  .em-incident-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .em-incident-date { font-size: 12px; color: #94a3b8; }
-  .em-incident-title { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
-  .em-incident-desc {
-    flex: 1;
-    margin: 0 0 16px;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #475569;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .em-incident-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 12px;
-    border-top: 1px solid #f1f5f9;
-  }
-  .em-incident-foot-label { font-size: 12px; font-weight: 600; color: #64748b; }
-
-  .em-empty {
-    padding: 56px 20px;
-    text-align: center;
-    color: #64748b;
-    background: #ffffff;
-    border: 1px dashed #cbd5e1;
-    border-radius: 22px;
-  }
-  .em-empty-icon { margin-bottom: 8px; font-size: 32px; }
-
-  .em-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(4px);
-    animation: em-fade 0.15s ease-out;
-  }
-  @keyframes em-fade { from { opacity: 0; } to { opacity: 1; } }
-  .em-modal {
-    width: 100%;
-    max-width: 480px;
-    padding: 28px;
-    background: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.45);
-    animation: em-pop 0.18s ease-out;
-  }
-  @keyframes em-pop {
-    from { opacity: 0; transform: translateY(10px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .em-modal-head { display: flex; align-items: center; justify-content: space-between; }
-  .em-modal-title { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
-  .em-close {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    font-size: 20px;
-    color: #64748b;
-    background: #f1f5f9;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  .em-close:hover { background: #e2e8f0; }
-  .em-form { display: flex; flex-direction: column; gap: 16px; margin-top: 22px; }
-  .em-field { display: flex; flex-direction: column; gap: 6px; }
-  .em-label { font-size: 13px; font-weight: 600; color: #334155; }
-  .em-input {
-    width: 100%;
-    padding: 11px 14px;
-    box-sizing: border-box;
-    font-family: inherit;
-    font-size: 14px;
-    color: #0f172a;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .em-input:focus {
-    background: #ffffff;
-    border-color: #34d399;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.22);
-  }
-  .em-textarea { resize: vertical; }
-  .em-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
-
-  @media (max-width: 960px) {
-    .em-stats { grid-template-columns: repeat(2, 1fr); }
-    .em-hero { grid-column: span 2; }
-  }
-  @media (max-width: 560px) {
-    .em-title { font-size: 25px; }
-    .em-stats { grid-template-columns: 1fr; }
-    .em-hero { grid-column: span 1; }
-    .em-recent-item { flex-wrap: wrap; padding: 14px 18px; }
-    .em-recent-main { flex-basis: calc(100% - 30px); }
-  }
-`;
