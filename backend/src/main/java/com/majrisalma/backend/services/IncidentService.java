@@ -96,6 +96,12 @@ public class IncidentService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
+        if (user.getRole() == Role.TECHNICIAN) {
+            if (incident.getAssignedTo() == null || !incident.getAssignedTo().getId().equals(user.getId())) {
+                throw new RuntimeException("Accès refusé : Cet incident ne vous est pas affecté.");
+            }
+        }
+
         Status oldStatus = incident.getStatus();
         incident.setStatus(newStatus);
         Incident updatedIncident = incidentRepository.save(incident);
